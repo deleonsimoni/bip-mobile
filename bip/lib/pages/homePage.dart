@@ -1,16 +1,6 @@
-import 'package:bip/models/item.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
-  List<Item> items = [];
-
-  HomePage() {
-    items = [];
-    items.add(Item(title: "item 1", done: false));
-    items.add(Item(title: "item 1", done: false));
-    items.add(Item(title: "item 3", done: true));
-  }
-
   var name = "usuario";
 
   @override
@@ -84,21 +74,17 @@ class _HomePageState extends State<HomePage> {
               Divider(),
               ButtonTheme(
                 height: 60.0,
-                child: ElevatedButton(
+                buttonColor: Colors.red,
+                shape: RoundedRectangleBorder(),
+                textTheme: ButtonTextTheme.accent,
+                child: IconButton(
                   onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => HomePage()),
                     );
                   },
-                  child: Text(
-                    "Marcar Ponto",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.red, // background
-                    onPrimary: Colors.white, // foreground
-                  ),
+                  icon: const Icon(Icons.volume_up),
                 ),
               )
             ],
