@@ -2,6 +2,7 @@ import 'package:bip/components/alerta.comp.dart';
 import 'package:bip/pages/homePage.dart';
 import 'package:bip/services/login.api.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -12,6 +13,21 @@ class _LoginPageState extends State<LoginPage> {
   final ctrlLogin = TextEditingController();
   final ctrlSenha = TextEditingController();
   final formKey = GlobalKey<FormState>();
+
+  @override
+  void initState() {
+    _getThingsOnStartup();
+    super.initState();
+  }
+
+  _getThingsOnStartup() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String token = prefs.get('tk');
+    if (token != null) {
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => HomePage()));
+    }
+  }
 
   String validaLogin(String texto) {
     if (texto.isEmpty) {
@@ -33,8 +49,6 @@ class _LoginPageState extends State<LoginPage> {
     if (!formValid) {
       return;
     }
-
-    print("login: ${ctrlLogin.text} Senha: ${ctrlSenha.text}");
 
     var usuario = await LoginApi.login(ctrlLogin.text, ctrlSenha.text);
 

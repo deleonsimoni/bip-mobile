@@ -1,15 +1,24 @@
+import 'package:bip/pages/bipPage%20copy.dart';
 import 'package:bip/pages/inventariosPage.dart';
 import 'package:bip/pages/loginPage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class HomePage extends StatefulWidget {
+class SecaoPage extends StatefulWidget {
+  String inventario;
+
+  SecaoPage(this.inventario);
+
   @override
-  _HomePageState createState() => _HomePageState();
+  State<StatefulWidget> createState() {
+    return _SecaoPageState(this.inventario);
+  }
 }
 
-class _HomePageState extends State<HomePage> {
+class _SecaoPageState extends State<SecaoPage> {
   String usuario = '';
+  String inventario;
+  _SecaoPageState(this.inventario);
 
   @override
   void initState() {
@@ -36,7 +45,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         //leading: Text('B.I.P'),
-        title: Text('B.I.P'),
+        title: Text('Seção'),
         automaticallyImplyLeading: false,
         actions: [
           Icon(Icons.ac_unit),
@@ -50,10 +59,27 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'Olá, $usuario vamos bipar?',
+                'iventário $inventario?',
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Divider(),
+              Container(
+                margin: EdgeInsets.only(left: 16.0),
+                child: TextFormField(
+                  autofocus: true,
+                  decoration: InputDecoration(
+                      hintText: 'Seção',
+                      filled: true,
+                      prefixIcon: Icon(
+                        Icons.account_box,
+                        size: 28.0,
+                      ),
+                      suffixIcon: IconButton(
+                        icon: Icon(Icons.remove),
+                      )),
+                ),
               ),
               Divider(),
               ButtonTheme(
@@ -63,68 +89,19 @@ class _HomePageState extends State<HomePage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => InventariosPage()),
+                          builder: (context) => BipPage(inventario)),
                     );
                   },
                   child: Text(
-                    "Inventários",
+                    "BIPAR",
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 60),
                     primary: Colors.red, // background
                     onPrimary: Colors.white, // foreground
                   ),
                 ),
               ),
-              Divider(),
-              ButtonTheme(
-                height: 60.0,
-                child: ElevatedButton(
-                  onPressed: () {},
-                  child: Text(
-                    "Marcar Ponto",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.deepPurple, // background
-                    onPrimary: Colors.white, // foreground
-                  ),
-                ),
-              ),
-              Divider(),
-              ButtonTheme(
-                height: 60.0,
-                child: ElevatedButton(
-                  onPressed: () {
-                    sair();
-                  },
-                  child: Text(
-                    "Sair",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    primary: Colors.purple, // background
-                    onPrimary: Colors.white, // foreground
-                  ),
-                ),
-              ),
-              Divider(),
-              ButtonTheme(
-                height: 60.0,
-                buttonColor: Colors.red,
-                shape: RoundedRectangleBorder(),
-                textTheme: ButtonTextTheme.accent,
-                child: IconButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => HomePage()),
-                    );
-                  },
-                  icon: const Icon(Icons.volume_up),
-                ),
-              )
             ],
           ),
         ),
