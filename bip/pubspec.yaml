@@ -34,7 +34,8 @@ dependencies:
   intl: ^0.17.0
   flutter_easyloading: ^3.0.3
   sqflite: ^2.0.0+4
-
+  path: ^1.8.0
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

@@ -1,24 +1,44 @@
+import 'dart:io';
+
+import 'package:bip/models/bip.dart';
 import 'package:bip/models/inventarioList.dart';
+import 'package:bip/models/itemsList.dart';
 import 'package:bip/pages/inventariosPage.dart';
 import 'package:bip/pages/loginPage.dart';
+import 'package:bip/pages/secaoPage.dart';
+import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:collection/collection.dart';
+
+class AlwaysDisabledFocusNode extends FocusNode {
+  @override
+  bool get hasFocus => false;
+}
 
 class BipPage extends StatefulWidget {
   InventarioList inventario;
-
-  BipPage(this.inventario);
+  List<ItemsList> items;
+  String secao;
+  BipPage(this.inventario, this.items, this.secao);
 
   @override
   State<StatefulWidget> createState() {
-    return _BipPageState(this.inventario);
+    return _BipPageState(this.inventario, this.items, this.secao);
   }
 }
 
 class _BipPageState extends State<BipPage> {
   String usuario = '';
   InventarioList inventario;
-  _BipPageState(this.inventario);
+  List<Bip> bips = [];
+  String secao;
+  List<ItemsList> items;
+  _BipPageState(this.inventario, this.items, this.secao);
+  final ctrlRefer = TextEditingController();
+  final ctrlQuantity = TextEditingController();
+  final ctrlFinalize = TextEditingController();
 
   @override
   void initState() {
@@ -38,6 +58,57 @@ class _BipPageState extends State<BipPage> {
     await prefs.clear();
     Navigator.push(
         context, MaterialPageRoute(builder: (context) => LoginPage()));
+  }
+
+  _finalizarSecao() async {
+    if (ctrlFinalize.text != null &&
+        int.parse(ctrlFinalize.text) != bips.length) {
+      EasyLoading.showError(
+          'Quantidade informada não bate, favor bipar seção novamente');
+      sleep(Duration(seconds: 3));
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => SecaoPage(inventario)));
+      return;
+    } else {
+      EasyLoading.show(status: 'Finalizando Seção...');
+      sleep(Duration(seconds: 3));
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      InventarioApi.finalizarSecao(inventario.sId, prefs.get('tk'), bips)
+          .then((response) {
+        if (response.status == 200) {
+          EasyLoading.showSuccess('Seção cadastrada com sucesso');
+          Navigator.push(context,
+              MaterialPageRoute(builder: (context) => SecaoPage(inventario)));
+        } else {
+          EasyLoading.showError(
+              'Ocorreu algum erro, tente novamente mais tarde');
+        }
+      });
+    }
+  }
+
+  _registrar() {
+    if (ctrlRefer.text == "" || ctrlRefer == null) {
+      EasyLoading.showError('Escaneie o código');
+      return;
+    }
+
+    if (ctrlQuantity.text == "" || ctrlQuantity == null) {
+      EasyLoading.showError('Digite a quantidade');
+      return;
+    }
+
+    var itemSelect =
+        items[0].itens.firstWhereOrNull((item) => item.refer == ctrlRefer.text);
+
+    bool find = itemSelect != null ? true : false;
+
+    Bip bip = new Bip(
+        secao, "439895", int.parse(ctrlQuantity.text), find, ctrlRefer.text);
+    bips.add(bip);
+    ctrlQuantity.text = "";
+    ctrlRefer.text = "";
   }
 
   @override
@@ -63,6 +134,7 @@ class _BipPageState extends State<BipPage> {
                 margin: EdgeInsets.only(left: 16.0),
                 child: TextFormField(
                   autofocus: true,
+                  controller: ctrlRefer,
                   decoration: InputDecoration(
                     hintText: 'Código do Produto',
                     filled: true,
@@ -77,7 +149,7 @@ class _BipPageState extends State<BipPage> {
               Container(
                 margin: EdgeInsets.only(left: 16.0),
                 child: TextFormField(
-                  autofocus: true,
+                  controller: ctrlQuantity,
                   decoration: InputDecoration(
                     hintText: 'Quantidade',
                     filled: true,
@@ -91,7 +163,9 @@ class _BipPageState extends State<BipPage> {
               Divider(),
               ButtonTheme(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    _registrar();
+                  },
                   child: Text(
                     "Registrar",
                     style: TextStyle(color: Colors.white),
@@ -135,14 +209,13 @@ class _BipPageState extends State<BipPage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Finalizar Seção'),
-            content: Text(
-                'Para finalizer a seção digite a quantidade de itens bipados'),
-            actions: <Widget>[
-              TextFormField(
+            title: Text('Quantidade de itens bipados'),
+            content: Container(
+              child: TextFormField(
+                controller: ctrlFinalize,
                 autofocus: true,
                 decoration: InputDecoration(
-                  hintText: 'Quantidade de itens bipados',
+                  hintText: 'Digite aqui',
                   filled: true,
                   prefixIcon: Icon(
                     Icons.check_circle_outline_rounded,
@@ -150,6 +223,8 @@ class _BipPageState extends State<BipPage> {
                   ),
                 ),
               ),
+            ),
+            actions: <Widget>[
               TextButton(
                   onPressed: () {
                     _dismissDialog();
@@ -157,8 +232,7 @@ class _BipPageState extends State<BipPage> {
                   child: Text('Voltar')),
               TextButton(
                 onPressed: () {
-                  print('HelloWorld!');
-                  _dismissDialog();
+                  _finalizarSecao();
                 },
                 child: Text('Confirmar!'),
               )
