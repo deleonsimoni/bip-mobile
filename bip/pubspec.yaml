@@ -32,6 +32,8 @@ dependencies:
   jwt_decoder: ^2.0.1
   shared_preferences: ^2.0.6
   intl: ^0.17.0
+  flutter_easyloading: ^3.0.3
+  sqflite: ^2.0.0+4
 
 dev_dependencies:
   flutter_test:

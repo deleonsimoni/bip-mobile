@@ -1,11 +1,17 @@
-import 'package:bip/pages/bipPage%20copy.dart';
+import 'dart:convert';
+
+import 'package:bip/models/inventarioList.dart';
+import 'package:bip/models/itemsList.dart';
+import 'package:bip/pages/bipPage.dart';
 import 'package:bip/pages/inventariosPage.dart';
 import 'package:bip/pages/loginPage.dart';
+import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SecaoPage extends StatefulWidget {
-  String inventario;
+  InventarioList inventario;
 
   SecaoPage(this.inventario);
 
@@ -17,20 +23,23 @@ class SecaoPage extends StatefulWidget {
 
 class _SecaoPageState extends State<SecaoPage> {
   String usuario = '';
-  String inventario;
-  _SecaoPageState(this.inventario);
+  InventarioList inventario;
+  var itens = new List<ItemsList>();
 
-  @override
-  void initState() {
-    _getThingsOnStartup().then((value) => setState(() {
-          usuario = value;
-        }));
-    super.initState();
+  _SecaoPageState(this.inventario) {
+    _getInventarios();
   }
 
-  Future<String> _getThingsOnStartup() async {
+  _getInventarios() async {
+    EasyLoading.show(status: 'Sincronizando Arquivo...');
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.get('name');
+    InventarioApi.getItens(inventario.sId, prefs.get('tk')).then((response) {
+      setState(() {
+        EasyLoading.dismiss();
+        Iterable lista = json.decode(response.body);
+        itens = lista.map((e) => ItemsList.fromJson(e)).toList();
+      });
+    });
   }
 
   Future<void> sair() async {
@@ -59,7 +68,7 @@ class _SecaoPageState extends State<SecaoPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'iventário $inventario?',
+                'iventário ${inventario.client.name}?',
                 textAlign: TextAlign.center,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontWeight: FontWeight.bold),

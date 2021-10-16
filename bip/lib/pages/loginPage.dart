@@ -3,6 +3,7 @@ import 'package:bip/pages/homePage.dart';
 import 'package:bip/services/login.api.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 class LoginPage extends StatefulWidget {
   @override

@@ -1,10 +1,6 @@
-import 'dart:convert';
-
 import 'package:bip/models/inventarioList.dart';
 import 'package:bip/pages/secaoPage.dart';
-import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class DetalheInventariosPage extends StatefulWidget {
   InventarioList inventario;
@@ -56,8 +52,7 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) =>
-                              SecaoPage(inventario.client.name)),
+                          builder: (context) => SecaoPage(inventario)),
                     );
                   },
                   child: Text(

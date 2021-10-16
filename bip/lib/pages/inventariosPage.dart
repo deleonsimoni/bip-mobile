@@ -6,6 +6,7 @@ import 'package:bip/pages/homePage.dart';
 import 'package:bip/pages/loginPage.dart';
 import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class InventariosPage extends StatefulWidget {
@@ -17,10 +18,11 @@ class _InventariosPageState extends State<InventariosPage> {
   var inventarios = new List<InventarioList>();
 
   _getInventarios() async {
+    EasyLoading.show(status: 'Aguarde...');
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    var token = prefs.get('tk');
     InventarioApi.getInventario(prefs.get('tk')).then((response) {
       setState(() {
+        EasyLoading.dismiss();
         Iterable lista = json.decode(response.body);
         inventarios = lista.map((e) => InventarioList.fromJson(e)).toList();
       });

@@ -14,4 +14,16 @@ class InventarioApi {
 
     return await http.get(url, headers: header);
   }
+
+  static Future getItens(String id, String token) async {
+    var url = Uri.http('localhost:3000', '/inventory/inventaryUser/$id/itens');
+    //  Uri.https('www.googleapis.com', '/books/v1/volumes', {'q': '{http}'});
+
+    var header = {
+      "Content-type": "application/json",
+      'Authorization': 'Bearer $token',
+    };
+
+    return await http.get(url, headers: header);
+  }
 }
