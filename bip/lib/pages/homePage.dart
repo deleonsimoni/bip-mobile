@@ -72,8 +72,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                   style: ElevatedButton.styleFrom(
                     minimumSize: Size(double.infinity, 60),
-                    primary: Colors.red, // background
+                    primary: Colors.red.shade700, // background
                     onPrimary: Colors.white, // foreground
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50)),
                   ),
                 ),
               ),
@@ -89,6 +91,8 @@ class _HomePageState extends State<HomePage> {
                   style: ElevatedButton.styleFrom(
                     primary: Colors.deepPurple, // background
                     onPrimary: Colors.white, // foreground
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50)),
                   ),
                 ),
               ),
@@ -106,6 +110,8 @@ class _HomePageState extends State<HomePage> {
                   style: ElevatedButton.styleFrom(
                     primary: Colors.purple, // background
                     onPrimary: Colors.white, // foreground
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50)),
                   ),
                 ),
               ),

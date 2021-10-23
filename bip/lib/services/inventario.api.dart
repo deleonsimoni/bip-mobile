@@ -6,7 +6,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 class InventarioApi {
   static Future getInventario(String token) async {
     var url = Uri.http('10.0.2.2:3000', '/inventory/inventaryUser');
-    //  Uri.https('www.googleapis.com', '/books/v1/volumes', {'q': '{http}'});
+    //var url = Uri.http('3.21.69.209', '/inventory/inventaryUser');
 
     var header = {
       "Content-type": "application/json",

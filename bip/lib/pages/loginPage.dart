@@ -56,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
     if (usuario != null) {
       navegaHomePage(context);
     } else {
-      alerta(context, "Login Inválido", "Login");
+      alerta(context, "Usuário ou senha inválidos", "Login");
     }
   }
 

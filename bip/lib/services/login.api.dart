@@ -33,6 +33,8 @@ class LoginApi {
 
       return Usuario.fromJson(mapResponse);
     } else {
+      EasyLoading.dismiss();
+
       return null;
     }
   }

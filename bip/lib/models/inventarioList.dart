@@ -5,12 +5,13 @@ class InventarioList {
   String startDate;
   String endDate;
   Client client;
+  bool isQuantify;
 
   InventarioList({this.sId, this.startDate, this.endDate, this.client});
 
   InventarioList.fromJson(Map<String, dynamic> json) {
     sId = json['_id'];
-
+    isQuantify = json['isQuantify'];
     startDate = DateFormat('dd/MM/yyyy').format(DateTime.parse(
         new DateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
             .parse(json['startDate'])

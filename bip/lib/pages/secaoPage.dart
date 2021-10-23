@@ -28,24 +28,7 @@ class _SecaoPageState extends State<SecaoPage> {
   DatabaseHandler handler;
   final ctrlSecao = TextEditingController();
 
-  var itens = new List<ItemsList>();
-
-  _SecaoPageState(this.inventario) {
-    _getInventarios();
-  }
-
-  _getInventarios() async {
-    EasyLoading.show(status: 'Sincronizando Arquivo...');
-
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    InventarioApi.getItens(inventario.sId, prefs.get('tk')).then((response) {
-      setState(() {
-        Iterable lista = json.decode(response.body);
-        itens = lista.map((e) => ItemsList.fromJson(e)).toList();
-        EasyLoading.dismiss();
-      });
-    });
-  }
+  _SecaoPageState(this.inventario) {}
 
   Future<void> sair() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -54,16 +37,31 @@ class _SecaoPageState extends State<SecaoPage> {
         context, MaterialPageRoute(builder: (context) => LoginPage()));
   }
 
-  _bipar() {
+  _bipar() async {
     if (ctrlSecao.text == "" || ctrlSecao == null) {
       EasyLoading.showError('Digite a seção');
       return;
     }
+    this.handler = DatabaseHandler();
+    bool existSection =
+        await this.handler.checkSectionExist(inventario.sId, ctrlSecao.text);
+
+    if (existSection) {
+      EasyLoading.showError('Seção já bipada por este dispositivo');
+      return;
+    }
+    /* else {
+      //check secao in server
+      existSection
+    }*/
+
+    final idSecao =
+        await this.handler.insertSecao(inventario.sId, ctrlSecao.text);
 
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => BipPage(inventario, itens, ctrlSecao.text)),
+          builder: (context) => BipPage(inventario, idSecao, ctrlSecao.text)),
     );
   }
 

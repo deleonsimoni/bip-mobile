@@ -2,15 +2,13 @@ import 'dart:io';
 
 import 'package:bip/models/bip.dart';
 import 'package:bip/models/inventarioList.dart';
-import 'package:bip/models/itemsList.dart';
-import 'package:bip/pages/inventariosPage.dart';
-import 'package:bip/pages/loginPage.dart';
+import 'package:bip/pages/detalheInventarioPage.dart';
 import 'package:bip/pages/secaoPage.dart';
+import 'package:bip/services/databaseHandler.dart';
 import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:collection/collection.dart';
 
 class AlwaysDisabledFocusNode extends FocusNode {
   @override
@@ -19,13 +17,15 @@ class AlwaysDisabledFocusNode extends FocusNode {
 
 class BipPage extends StatefulWidget {
   InventarioList inventario;
-  List<ItemsList> items;
-  String secao;
-  BipPage(this.inventario, this.items, this.secao);
+  int secao;
+  String secaoText;
+  DatabaseHandler handler;
+
+  BipPage(this.inventario, this.secao, this.secaoText);
 
   @override
   State<StatefulWidget> createState() {
-    return _BipPageState(this.inventario, this.items, this.secao);
+    return _BipPageState(this.inventario, this.secao, this.secaoText);
   }
 }
 
@@ -33,82 +33,92 @@ class _BipPageState extends State<BipPage> {
   String usuario = '';
   InventarioList inventario;
   List<Bip> bips = [];
-  String secao;
-  List<ItemsList> items;
-  _BipPageState(this.inventario, this.items, this.secao);
+  int secao;
+  String secaoText;
+
+  List<String> itensClient;
+  _BipPageState(this.inventario, this.secao, this.secaoText);
   final ctrlRefer = TextEditingController();
   final ctrlQuantity = TextEditingController();
   final ctrlFinalize = TextEditingController();
+  DatabaseHandler handler;
 
   @override
   void initState() {
-    _getThingsOnStartup().then((value) => setState(() {
-          usuario = value;
+    _getItensFromDB(inventario).then((value) => setState(() {
+          EasyLoading.dismiss();
+          itensClient = value;
         }));
     super.initState();
   }
 
-  Future<String> _getThingsOnStartup() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    return prefs.get('name');
-  }
+  Future<List<String>> _getItensFromDB(inventario) async {
+    EasyLoading.show(status: 'Preparando Bipagem');
 
-  Future<void> sair() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    Navigator.push(
-        context, MaterialPageRoute(builder: (context) => LoginPage()));
+    this.handler = DatabaseHandler();
+    return await this.handler.getItenClient(inventario.sId);
   }
 
   _finalizarSecao() async {
     if (ctrlFinalize.text != null &&
         int.parse(ctrlFinalize.text) != bips.length) {
-      EasyLoading.showError(
-          'Quantidade informada não bate, favor bipar seção novamente');
-      sleep(Duration(seconds: 3));
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => SecaoPage(inventario)));
-      return;
-    } else {
-      EasyLoading.show(status: 'Finalizando Seção...');
-      sleep(Duration(seconds: 3));
+      await this.handler.deleteBip(secao);
+      await this.handler.deleteSecao(secao);
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      InventarioApi.finalizarSecao(inventario.sId, prefs.get('tk'), bips)
-          .then((response) {
-        if (response.status == 200) {
-          EasyLoading.showSuccess('Seção cadastrada com sucesso');
-          Navigator.push(context,
-              MaterialPageRoute(builder: (context) => SecaoPage(inventario)));
-        } else {
-          EasyLoading.showError(
-              'Ocorreu algum erro, tente novamente mais tarde');
+      EasyLoading.addStatusCallback((status) {
+        if (status == EasyLoadingStatus.dismiss) {
+          EasyLoading.removeAllCallbacks();
+
+          Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => DetalheInventariosPage(inventario)));
         }
       });
+      EasyLoading.showInfo(
+          'Quantidade informada não bate, favor bipar seção novamente');
+      return;
+    } else {
+      EasyLoading.showSuccess('Seção contabilizada com sucesso');
+      await this.handler.updateStatusSecao(secao, 1);
+
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => DetalheInventariosPage(inventario)));
     }
   }
 
-  _registrar() {
+  _registrar() async {
+    EasyLoading.show(status: "Aguarde...");
     if (ctrlRefer.text == "" || ctrlRefer == null) {
       EasyLoading.showError('Escaneie o código');
       return;
     }
 
-    if (ctrlQuantity.text == "" || ctrlQuantity == null) {
+    if (inventario.isQuantify &&
+        (ctrlQuantity.text == "" || ctrlQuantity == null)) {
       EasyLoading.showError('Digite a quantidade');
       return;
     }
 
-    var itemSelect =
-        items[0].itens.firstWhereOrNull((item) => item.refer == ctrlRefer.text);
+    final itemSelect = itensClient
+        .firstWhere((barcode) => barcode == ctrlRefer.text, orElse: () {
+      return null;
+    });
 
     bool find = itemSelect != null ? true : false;
 
-    Bip bip = new Bip(
-        secao, "439895", int.parse(ctrlQuantity.text), find, ctrlRefer.text);
+    Bip bip =
+        new Bip(inventario.sId, secaoText, ctrlRefer.text, find, "device");
+
+    this.handler = DatabaseHandler();
+    await handler.insertBip(
+        inventario.sId, secao, ctrlRefer.text, find, "device");
     bips.add(bip);
     ctrlQuantity.text = "";
     ctrlRefer.text = "";
+    EasyLoading.dismiss();
   }
 
   @override
@@ -145,20 +155,21 @@ class _BipPageState extends State<BipPage> {
                   ),
                 ),
               ),
-              //if (true)
               Container(
                 margin: EdgeInsets.only(left: 16.0),
-                child: TextFormField(
-                  controller: ctrlQuantity,
-                  decoration: InputDecoration(
-                    hintText: 'Quantidade',
-                    filled: true,
-                    prefixIcon: Icon(
-                      Icons.queue_rounded,
-                      size: 28.0,
-                    ),
-                  ),
-                ),
+                child: (inventario.isQuantify)
+                    ? TextFormField(
+                        controller: ctrlQuantity,
+                        decoration: InputDecoration(
+                          hintText: 'Quantidade',
+                          filled: true,
+                          prefixIcon: Icon(
+                            Icons.queue_rounded,
+                            size: 28.0,
+                          ),
+                        ),
+                      )
+                    : SizedBox.shrink(),
               ),
               Divider(),
               ButtonTheme(
@@ -171,7 +182,7 @@ class _BipPageState extends State<BipPage> {
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 60),
+                    minimumSize: Size(double.infinity, 100),
                     primary: Colors.green, // background
                     onPrimary: Colors.white, // foreground
                   ),

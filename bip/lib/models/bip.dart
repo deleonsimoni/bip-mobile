@@ -1,36 +1,31 @@
 import 'package:intl/intl.dart';
 
 class Bip {
-  String section;
+  int id;
+  String idInventario;
+  String idSecao;
+  String bip;
+  bool isFounded;
   String device;
-  int quantity;
-  bool find;
-  String refer;
 
-  Bip(String section, String device, int quantity, bool find, String refer) {
-    // There's a better way to do this, stay tuned.
-    this.section = section;
-    this.device = device;
-    this.quantity = quantity;
-    this.find = find;
-    this.refer = refer;
-  }
+  Bip(this.idInventario, this.idSecao, this.bip, this.isFounded, this.device);
 
   Bip.fromJson(Map<String, dynamic> json) {
-    section = json['section'];
+    idInventario = json['idInventario'];
+    idSecao = json['idSecao'];
+    bip = json['bip'];
+    isFounded = json['isFounded'];
     device = json['device'];
-    quantity = json['quantity'];
-    find = json['find'];
-    refer = json['refer'];
   }
 
   Map<String, dynamic> toJson() {
     final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['section'] = this.section;
+    data['id'] = this.id;
+    data['idInventario'] = this.idInventario;
+    data['idSecao'] = this.idSecao;
+    data['bip'] = this.bip;
+    data['isFounded'] = this.isFounded;
     data['device'] = this.device;
-    data['quantity'] = this.quantity;
-    data['find'] = this.find;
-    data['refer'] = this.refer;
     return data;
   }
 }
