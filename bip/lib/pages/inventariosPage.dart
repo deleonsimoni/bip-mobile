@@ -19,6 +19,14 @@ class _InventariosPageState extends State<InventariosPage> {
   DatabaseHandler handler;
   FileUtils fileUtils = new FileUtils();
   var existInDatabase = false;
+  List<String> itensClient;
+
+  _carregarItensMemoria(inventario) async {
+    EasyLoading.show(status: 'Preparando Bipagem');
+    this.handler = DatabaseHandler();
+    itensClient = await this.handler.getItenClient(inventario.sId);
+    _detalharInventario(inventario, itensClient);
+  }
 
   _syncornizeFileWithServer(inventario) async {
     EasyLoading.show(status: 'Sincronizando Arquivo...');
@@ -27,16 +35,14 @@ class _InventariosPageState extends State<InventariosPage> {
     existInDatabase = await this.handler.checkInventoryInBase(inventario.sId);
     if (existInDatabase) {
       EasyLoading.dismiss();
-      _detalharInventario(inventario);
+      _carregarItensMemoria(inventario);
     } else {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       InventarioApi.getItens(inventario.sId, prefs.get('tk'))
           .then((response) async {
         await this.handler.insertInventory(inventario.sId);
         fileUtils.write(response.body, inventario.sId);
-
         EasyLoading.showSuccess('Arquivo sincronizado');
-        _detalharInventario(inventario);
       });
     }
   }
@@ -53,9 +59,9 @@ class _InventariosPageState extends State<InventariosPage> {
     });
   }
 
-  _detalharInventario(inventario) {
+  _detalharInventario(inventario, itensClient) {
     Navigator.of(context).push(MaterialPageRoute(
-        builder: (context) => DetalheInventariosPage(inventario)));
+        builder: (context) => DetalheInventariosPage(inventario, itensClient)));
   }
 
   _InventariosPageState() {

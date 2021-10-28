@@ -1,12 +1,7 @@
-import 'dart:convert';
-
 import 'package:bip/models/inventarioList.dart';
-import 'package:bip/models/itemsList.dart';
 import 'package:bip/pages/bipPage.dart';
-import 'package:bip/pages/inventariosPage.dart';
 import 'package:bip/pages/loginPage.dart';
 import 'package:bip/services/databaseHandler.dart';
-import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -14,11 +9,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 class SecaoPage extends StatefulWidget {
   InventarioList inventario;
 
-  SecaoPage(this.inventario);
+  SecaoPage(this.inventario, this.itensClient);
+  List<String> itensClient;
 
   @override
   State<StatefulWidget> createState() {
-    return _SecaoPageState(this.inventario);
+    return _SecaoPageState(this.inventario, this.itensClient);
   }
 }
 
@@ -26,9 +22,10 @@ class _SecaoPageState extends State<SecaoPage> {
   String usuario = '';
   InventarioList inventario;
   DatabaseHandler handler;
+  List<String> itensClient;
   final ctrlSecao = TextEditingController();
 
-  _SecaoPageState(this.inventario) {}
+  _SecaoPageState(this.inventario, this.itensClient) {}
 
   Future<void> sair() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -61,7 +58,8 @@ class _SecaoPageState extends State<SecaoPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => BipPage(inventario, idSecao, ctrlSecao.text)),
+          builder: (context) =>
+              BipPage(inventario, idSecao, ctrlSecao.text, this.itensClient)),
     );
   }
 

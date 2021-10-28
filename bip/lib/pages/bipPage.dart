@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bip/models/bip.dart';
@@ -20,12 +21,13 @@ class BipPage extends StatefulWidget {
   int secao;
   String secaoText;
   DatabaseHandler handler;
-
-  BipPage(this.inventario, this.secao, this.secaoText);
+  List<String> itensClient;
+  BipPage(this.inventario, this.secao, this.secaoText, this.itensClient);
 
   @override
   State<StatefulWidget> createState() {
-    return _BipPageState(this.inventario, this.secao, this.secaoText);
+    return _BipPageState(
+        this.inventario, this.secao, this.secaoText, this.itensClient);
   }
 }
 
@@ -35,9 +37,11 @@ class _BipPageState extends State<BipPage> {
   List<Bip> bips = [];
   int secao;
   String secaoText;
+  bool showKeyboard = true;
+  FocusNode nodeFirst = FocusNode();
 
   List<String> itensClient;
-  _BipPageState(this.inventario, this.secao, this.secaoText);
+  _BipPageState(this.inventario, this.secao, this.secaoText, this.itensClient);
   final ctrlRefer = TextEditingController();
   final ctrlQuantity = TextEditingController();
   final ctrlFinalize = TextEditingController();
@@ -45,10 +49,16 @@ class _BipPageState extends State<BipPage> {
 
   @override
   void initState() {
-    _getItensFromDB(inventario).then((value) => setState(() {
-          EasyLoading.dismiss();
-          itensClient = value;
-        }));
+    ctrlRefer.addListener(() {
+      if (showKeyboard == true && ctrlRefer.text != "") {
+        _registrar();
+      }
+    });
+    new Timer(const Duration(milliseconds: 400), () {
+      setState(() {
+        ctrlRefer.text = "00ff5";
+      });
+    });
     super.initState();
   }
 
@@ -63,7 +73,9 @@ class _BipPageState extends State<BipPage> {
     if (ctrlFinalize.text != null &&
         int.parse(ctrlFinalize.text) != bips.length) {
       await this.handler.deleteBip(secao);
-      await this.handler.deleteSecao(secao);
+      await this.handler.updateStatusSecao(secao, 0);
+
+      //await this.handler.deleteSecao(secao);
 
       EasyLoading.addStatusCallback((status) {
         if (status == EasyLoadingStatus.dismiss) {
@@ -72,7 +84,8 @@ class _BipPageState extends State<BipPage> {
           Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => DetalheInventariosPage(inventario)));
+                  builder: (context) =>
+                      DetalheInventariosPage(inventario, this.itensClient)));
         }
       });
       EasyLoading.showInfo(
@@ -85,7 +98,8 @@ class _BipPageState extends State<BipPage> {
       Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => DetalheInventariosPage(inventario)));
+              builder: (context) =>
+                  DetalheInventariosPage(inventario, this.itensClient)));
     }
   }
 
@@ -108,107 +122,136 @@ class _BipPageState extends State<BipPage> {
     });
 
     bool find = itemSelect != null ? true : false;
+    if (!find) {
+      EasyLoading.showInfo('Atenção: Produto não catálogado');
+      return;
+    } else {
+      Bip bip =
+          new Bip(inventario.sId, secaoText, ctrlRefer.text, find, "device");
 
-    Bip bip =
-        new Bip(inventario.sId, secaoText, ctrlRefer.text, find, "device");
-
-    this.handler = DatabaseHandler();
-    await handler.insertBip(
-        inventario.sId, secao, ctrlRefer.text, find, "device");
-    bips.add(bip);
-    ctrlQuantity.text = "";
-    ctrlRefer.text = "";
-    EasyLoading.dismiss();
+      this.handler = DatabaseHandler();
+      await handler.insertBip(
+          inventario.sId, secao, ctrlRefer.text, find, "device");
+      bips.add(bip);
+      setState(() {
+        ctrlQuantity.text = "";
+        ctrlRefer.text = "";
+        showKeyboard = true;
+        FocusScope.of(context).requestFocus(nodeFirst);
+      });
+      EasyLoading.dismiss();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        //leading: Text('B.I.P'),
-        title: Text('Bipando...'),
-        automaticallyImplyLeading: false,
-        actions: [
-          Icon(Icons.ac_unit),
-        ],
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(10),
-        child: Center(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Divider(),
-              Container(
-                margin: EdgeInsets.only(left: 16.0),
-                child: TextFormField(
-                  autofocus: true,
-                  controller: ctrlRefer,
-                  decoration: InputDecoration(
-                    hintText: 'Código do Produto',
-                    filled: true,
-                    prefixIcon: Icon(
-                      Icons.receipt_rounded,
-                      size: 28.0,
+    return WillPopScope(
+      onWillPop: () async {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Botão de voltar desativado nesta página')));
+        return false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          //leading: Text('B.I.P'),
+          title: Text('Bipando...'),
+          automaticallyImplyLeading: false,
+          actions: [
+            Icon(Icons.ac_unit),
+          ],
+        ),
+        body: Padding(
+          padding: EdgeInsets.all(10),
+          child: Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Seção: $secaoText',
+                  textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Divider(),
+                Container(
+                  margin: EdgeInsets.only(left: 16.0),
+                  child: TextFormField(
+                    autofocus: true,
+                    showCursor: showKeyboard,
+                    readOnly: showKeyboard,
+                    focusNode: nodeFirst,
+                    controller: ctrlRefer,
+                    onTap: () {
+                      setState(() {
+                        showKeyboard = false;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      hintText: 'Código do Produto',
+                      filled: true,
+                      prefixIcon: Icon(
+                        Icons.receipt_rounded,
+                        size: 28.0,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Container(
-                margin: EdgeInsets.only(left: 16.0),
-                child: (inventario.isQuantify)
-                    ? TextFormField(
-                        controller: ctrlQuantity,
-                        decoration: InputDecoration(
-                          hintText: 'Quantidade',
-                          filled: true,
-                          prefixIcon: Icon(
-                            Icons.queue_rounded,
-                            size: 28.0,
+                Container(
+                  margin: EdgeInsets.only(left: 16.0),
+                  child: (inventario.isQuantify)
+                      ? TextFormField(
+                          controller: ctrlQuantity,
+                          decoration: InputDecoration(
+                            hintText: 'Quantidade',
+                            filled: true,
+                            prefixIcon: Icon(
+                              Icons.queue_rounded,
+                              size: 28.0,
+                            ),
                           ),
-                        ),
-                      )
-                    : SizedBox.shrink(),
-              ),
-              Divider(),
-              ButtonTheme(
-                child: ElevatedButton(
-                  onPressed: () {
-                    _registrar();
-                  },
-                  child: Text(
-                    "Registrar",
-                    style: TextStyle(color: Colors.white),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    minimumSize: Size(double.infinity, 100),
-                    primary: Colors.green, // background
-                    onPrimary: Colors.white, // foreground
-                  ),
+                        )
+                      : SizedBox.shrink(),
                 ),
-              ),
-              Divider(),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ButtonTheme(
-                  height: 60.0,
+                Divider(),
+                ButtonTheme(
                   child: ElevatedButton(
                     onPressed: () {
-                      _showDialogFimSecao();
+                      _registrar();
                     },
                     child: Text(
-                      "Finalizar Seção",
+                      "Registrar",
                       style: TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.red, // background
+                      minimumSize: Size(double.infinity, 100),
+                      primary: Colors.green, // background
                       onPrimary: Colors.white, // foreground
                     ),
                   ),
                 ),
-              ),
-            ],
+                Divider(),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ButtonTheme(
+                    height: 60.0,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _showDialogFimSecao();
+                      },
+                      child: Text(
+                        "Finalizar Seção",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        primary: Colors.red, // background
+                        onPrimary: Colors.white, // foreground
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -5,8 +5,8 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 
 class InventarioApi {
   static Future getInventario(String token) async {
-    var url = Uri.http('10.0.2.2:3000', '/inventory/inventaryUser');
     //var url = Uri.http('3.21.69.209', '/inventory/inventaryUser');
+    var url = Uri.http('10.0.2.2:3000', '/inventory/inventaryUser');
 
     var header = {
       "Content-type": "application/json",
@@ -34,7 +34,6 @@ class InventarioApi {
 
   static Future getItens(String id, String token) async {
     var url = Uri.http('10.0.2.2:3000', '/inventory/inventaryUser/$id/itens');
-    //  Uri.https('www.googleapis.com', '/books/v1/volumes', {'q': '{http}'});
 
     var header = {
       "Content-type": "application/json",

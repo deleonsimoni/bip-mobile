@@ -1,3 +1,4 @@
+import 'package:bip/models/bip.dart';
 import 'package:bip/models/db/secao.dart';
 import 'package:bip/models/itemsList.dart';
 import 'package:bip/services/FileUtils.dart';
@@ -10,7 +11,7 @@ String tableInventory =
     "CREATE TABLE IF NOT EXISTS inventoryClient(id INTEGER PRIMARY KEY AUTOINCREMENT, idInventario TEXT NOT NULL) ";
 String tableSecao =
     "CREATE TABLE IF NOT EXISTS secao(id INTEGER PRIMARY KEY AUTOINCREMENT, idInventario TEXT NOT NULL, idSecao text NOT NULL, status INTEGER NOT NULL)";
-String tableItens =
+String tableBip =
     "CREATE TABLE IF NOT EXISTS bip(id INTEGER PRIMARY KEY AUTOINCREMENT, idInventario TEXT NOT NULL, idSecao int NOT NULL, bip TEXT NOT NULL, device TEXT NOT NULL, isFounded INTEGER NOT NULL,  FOREIGN KEY (idSecao) REFERENCES secao(id))";
 
 extension Ex on double {
@@ -36,7 +37,7 @@ class DatabaseHandler {
       onCreate: (database, version) async {
         await database.execute(tableInventory);
         await database.execute(tableSecao);
-        await database.execute(tableItens);
+        await database.execute(tableBip);
       },
       version: 3,
     );
@@ -52,6 +53,15 @@ class DatabaseHandler {
     final db = await database;
     return await db.insert('secao',
         {'idInventario': idInventory, 'idSecao': idSecao, 'status': 0});
+  }
+
+  Future<int> insertSecaoInicioEFim(
+      String idInventory, int inicio, int fim) async {
+    final db = await database;
+    for (var i = inicio; i <= fim; i++) {
+      await db.insert(
+          'secao', {'idInventario': idInventory, 'idSecao': i, 'status': 0});
+    }
   }
 
   Future<void> insertBip(String idInventory, int idSecao, String bip,
@@ -106,6 +116,23 @@ class DatabaseHandler {
     }
   }
 
+  Future<List<Secao>> getSecoesParaSincronizar(String idInventario) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+        "SELECT * FROM secao s " +
+            "WHERE s.idInventario = '$idInventario' " +
+            "AND s.status = 1 " +
+            "ORDER BY s.idsecao ASC ");
+    return List.generate(maps.length, (i) {
+      return Secao(
+        id: maps[i]['id'],
+        idInventario: maps[i]['idInventario'],
+        idSecao: maps[i]['idSecao'],
+        status: maps[i]['status'],
+      );
+    });
+  }
+
   Future<List<Secao>> getSecoes(String idInventario) async {
     final db = await database;
     final List<Map<String, dynamic>> maps = await db.rawQuery(
@@ -121,6 +148,21 @@ class DatabaseHandler {
         status: maps[i]['status'],
         qtdBips: maps[i]['bips'],
       );
+    });
+  }
+
+  Future<List<Bip>> getBipsSecao(int idSecao) async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.rawQuery(
+        "SELECT * FROM bip " + "WHERE idSecao = $idSecao " + "ORDER BY id ");
+
+    return List.generate(maps.length, (i) {
+      return new Bip(
+          maps[i]['idInventario'],
+          '',
+          maps[i]['bip'],
+          int.parse(maps[i]['isFounded'].toString()) == 1 ? true : false,
+          maps[i]['device']);
     });
   }
 

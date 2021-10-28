@@ -1,25 +1,31 @@
+import 'package:bip/models/bip.dart';
 import 'package:bip/models/db/secao.dart';
 import 'package:bip/models/inventarioList.dart';
 import 'package:bip/pages/bipPage.dart';
+import 'package:bip/pages/secaoInicioEFimPage.dart';
 import 'package:bip/pages/secaoPage.dart';
 import 'package:bip/services/databaseHandler.dart';
+import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 class DetalheInventariosPage extends StatefulWidget {
   InventarioList inventario;
+  List<String> itensClient;
 
-  DetalheInventariosPage(this.inventario);
+  DetalheInventariosPage(this.inventario, this.itensClient);
 
   @override
   State<StatefulWidget> createState() {
-    return _DetalheInventariosPageState(this.inventario);
+    return _DetalheInventariosPageState(this.inventario, this.itensClient);
   }
 }
 
 class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
   InventarioList inventario;
-  _DetalheInventariosPageState(this.inventario);
+  List<String> itensClient;
+
+  _DetalheInventariosPageState(this.inventario, this.itensClient);
 
   List<Secao> listaSecoes = new List<Secao>();
 
@@ -31,8 +37,16 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
     _getSecoes(inventario).then((value) => setState(() {
           EasyLoading.dismiss();
           listaSecoes = value;
+          if (listaSecoes == null || listaSecoes.length == 0) {
+            _cadastrarSecaoInicioEFim(this.inventario, this.itensClient);
+          }
         }));
     super.initState();
+  }
+
+  _cadastrarSecaoInicioEFim(inventario, itensClient) {
+    Navigator.of(context).push(MaterialPageRoute(
+        builder: (context) => SecaoInicioEFimPage(inventario, itensClient)));
   }
 
   Future<List<Secao>> _getSecoes(inventario) async {
@@ -52,6 +66,16 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
           ],
         ),
         body: detalheInventario());
+  }
+
+  _returnIcon(secao) {
+    if (secao.status == 0) {
+      return Icon(Icons.pending_actions);
+    } else if (secao.status == 1) {
+      return Icon(Icons.signal_wifi_off_rounded);
+    } else {
+      return Icon(Icons.check);
+    }
   }
 
   detalheInventario() {
@@ -76,7 +100,8 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => SecaoPage(inventario)),
+                          builder: (context) =>
+                              SecaoPage(inventario, itensClient)),
                     );
                   },
                   child: Text(
@@ -102,9 +127,8 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
               ),
               Row(children: <Widget>[
                 Expanded(child: Divider()),
-                Text(listaSecoes.length > 0
-                    ? "Seções já bipadas"
-                    : "Nenhuma seção bipada"),
+                Text(
+                    listaSecoes.length > 0 ? "Seções" : "Nenhuma seção bipada"),
                 Expanded(child: Divider()),
               ]),
               Container(
@@ -119,9 +143,7 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                           bottomLeft: Radius.circular(32),
                         ),
                         child: ListTile(
-                          leading: listaSecoes[index].status == 1
-                              ? Icon(Icons.signal_wifi_off_rounded)
-                              : Icon(Icons.done_outline_sharp),
+                          leading: _returnIcon(listaSecoes[index]),
                           title: Text(listaSecoes[index].idSecao),
                           selected: false,
                           trailing: Wrap(
@@ -142,6 +164,26 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                     },
                   ))),
               Divider(),
+              ButtonTheme(
+                height: 60.0,
+                child: ElevatedButton(
+                  onPressed: () {
+                    _showOptionsSyncronize();
+                  },
+                  child: Text(
+                    "Sincronizar com Servidor",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    minimumSize: Size(double.infinity, 30),
+
+                    primary: Colors.yellow.shade400, // background
+                    onPrimary: Colors.red, // foreground
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50)),
+                  ),
+                ),
+              ),
             ],
           ),
         ));
@@ -151,7 +193,67 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
     Navigator.pop(context);
   }
 
-  void _syncronizeServer(inventario, secao) {}
+  _sincronizarSecoes() async {
+    try {
+      EasyLoading.show(status: 'Sincronizando...');
+
+      this.handler = DatabaseHandler();
+      List<Bip> bips = [];
+      List<Secao> secoes =
+          await this.handler.getSecoesParaSincronizar(inventario.sId);
+
+      for (final secao in secoes) {
+        print(secao);
+        bips = await this.handler.getBipsSecao(secao.id);
+        /*InventarioApi.sincronizarSecao(inventario.sId,secao.idSecao, List<Bip> bips, prefs.get('tk'))
+          .then((response) async {
+      await this.handler.updateStatusSecao(secao.id, 2);
+      });*/
+
+      }
+      EasyLoading.showSuccess('Dados Sincronizados Com Sucesso!');
+      _dismissDialog();
+    } on Exception catch (e) {
+      _dismissDialog();
+      EasyLoading.showError(e.toString());
+    }
+  }
+
+  _showOptionsSyncronize() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Sincronizar'),
+            content: Text(
+                'Está com internet e deseja enviar os dados para o servidor?'),
+            actions: <Widget>[
+              TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.all(16.0),
+                  primary: Colors.blue,
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                onPressed: () async {
+                  _sincronizarSecoes();
+                },
+                child: Text('Sim'),
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.all(16.0),
+                  primary: Colors.blue,
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                onPressed: () {
+                  _dismissDialog();
+                },
+                child: Text('Não'),
+              )
+            ],
+          );
+        });
+  }
 
   void _showOptionsDialogDelete(secao) {
     this.secaoSelecionada = secao;
@@ -204,7 +306,7 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
             title: Text('${secaoSelecionada.idSecao}'),
             content: Text('O que deseja fazer?'),
             actions: <Widget>[
-              TextButton(
+              /*TextButton(
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.all(16.0),
                   primary: Colors.blue,
@@ -214,7 +316,7 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                   _syncronizeServer(inventario, secaoSelecionada.idSecao);
                 },
                 child: Text('Enviar Seção'),
-              ),
+              ),*/
               TextButton(
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.all(16.0),
@@ -226,11 +328,16 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => BipPage(inventario,
-                            secaoSelecionada.id, secaoSelecionada.idSecao)),
+                        builder: (context) => BipPage(
+                            inventario,
+                            secaoSelecionada.id,
+                            secaoSelecionada.idSecao,
+                            itensClient)),
                   );
                 },
-                child: Text('Reabrir Seção'),
+                child: secaoSelecionada.status == 0
+                    ? Text('Abrir Seção')
+                    : Text('Reabrir Seção'),
               ),
               TextButton(
                 style: TextButton.styleFrom(
