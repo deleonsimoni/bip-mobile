@@ -18,22 +18,25 @@ class AlwaysDisabledFocusNode extends FocusNode {
 
 class BipPage extends StatefulWidget {
   InventarioList inventario;
+  bool isPermitAvulse;
   int secao;
   String secaoText;
   DatabaseHandler handler;
   List<String> itensClient;
-  BipPage(this.inventario, this.secao, this.secaoText, this.itensClient);
+  BipPage(this.inventario, this.secao, this.secaoText, this.itensClient,
+      this.isPermitAvulse);
 
   @override
   State<StatefulWidget> createState() {
-    return _BipPageState(
-        this.inventario, this.secao, this.secaoText, this.itensClient);
+    return _BipPageState(this.inventario, this.secao, this.secaoText,
+        this.itensClient, this.isPermitAvulse);
   }
 }
 
 class _BipPageState extends State<BipPage> {
   String usuario = '';
   InventarioList inventario;
+  bool isPermitAvulse;
   List<Bip> bips = [];
   int secao;
   String secaoText;
@@ -41,7 +44,8 @@ class _BipPageState extends State<BipPage> {
   FocusNode nodeFirst = FocusNode();
 
   List<String> itensClient;
-  _BipPageState(this.inventario, this.secao, this.secaoText, this.itensClient);
+  _BipPageState(this.inventario, this.secao, this.secaoText, this.itensClient,
+      this.isPermitAvulse);
   final ctrlRefer = TextEditingController();
   final ctrlQuantity = TextEditingController();
   final ctrlFinalize = TextEditingController();
@@ -54,19 +58,12 @@ class _BipPageState extends State<BipPage> {
         _registrar();
       }
     });
-    new Timer(const Duration(milliseconds: 400), () {
+    /*new Timer(const Duration(milliseconds: 400), () {
       setState(() {
         ctrlRefer.text = "00ff5";
       });
-    });
+    });*/
     super.initState();
-  }
-
-  Future<List<String>> _getItensFromDB(inventario) async {
-    EasyLoading.show(status: 'Preparando Bipagem');
-
-    this.handler = DatabaseHandler();
-    return await this.handler.getItenClient(inventario.sId);
   }
 
   _finalizarSecao() async {
@@ -116,13 +113,16 @@ class _BipPageState extends State<BipPage> {
       return;
     }
 
-    final itemSelect = itensClient
-        .firstWhere((barcode) => barcode == ctrlRefer.text, orElse: () {
-      return null;
-    });
+    bool find = false;
+    if (!isPermitAvulse) {
+      final itemSelect = itensClient
+          .firstWhere((barcode) => barcode == ctrlRefer.text, orElse: () {
+        return null;
+      });
+      find = itemSelect != null ? true : false;
+    }
 
-    bool find = itemSelect != null ? true : false;
-    if (!find) {
+    if (!find && !isPermitAvulse) {
       EasyLoading.showInfo('Atenção: Produto não catálogado');
       return;
     } else {

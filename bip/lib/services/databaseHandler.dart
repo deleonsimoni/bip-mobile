@@ -33,7 +33,7 @@ class DatabaseHandler {
   Future<Database> initializeDB() async {
     String path = await getDatabasesPath();
     return openDatabase(
-      join(path, 'bipdb10.db'),
+      join(path, 'bipdb13.db'),
       onCreate: (database, version) async {
         await database.execute(tableInventory);
         await database.execute(tableSecao);
@@ -45,7 +45,6 @@ class DatabaseHandler {
 
   Future<void> insertInventory(String idInventory) async {
     final db = await database;
-
     await db.insert('inventoryClient', {'idInventario': idInventory});
   }
 

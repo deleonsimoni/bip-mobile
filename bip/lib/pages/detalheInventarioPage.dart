@@ -8,6 +8,7 @@ import 'package:bip/services/databaseHandler.dart';
 import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DetalheInventariosPage extends StatefulWidget {
   InventarioList inventario;
@@ -34,13 +35,7 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
 
   @override
   void initState() {
-    _getSecoes(inventario).then((value) => setState(() {
-          EasyLoading.dismiss();
-          listaSecoes = value;
-          if (listaSecoes == null || listaSecoes.length == 0) {
-            _cadastrarSecaoInicioEFim(this.inventario, this.itensClient);
-          }
-        }));
+    _getSecoes(inventario);
     super.initState();
   }
 
@@ -49,10 +44,17 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
         builder: (context) => SecaoInicioEFimPage(inventario, itensClient)));
   }
 
-  Future<List<Secao>> _getSecoes(inventario) async {
+  void _getSecoes(inventario) async {
     EasyLoading.show(status: 'Listando Seções...');
     this.handler = DatabaseHandler();
-    return await this.handler.getSecoes(inventario.sId);
+    var secoes = await this.handler.getSecoes(inventario.sId);
+    EasyLoading.dismiss();
+    setState(() {
+      listaSecoes = secoes;
+    });
+    if (listaSecoes == null || listaSecoes.length == 0) {
+      _cadastrarSecaoInicioEFim(this.inventario, this.itensClient);
+    }
   }
 
   @override
@@ -196,6 +198,7 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
   _sincronizarSecoes() async {
     try {
       EasyLoading.show(status: 'Sincronizando...');
+      SharedPreferences prefs = await SharedPreferences.getInstance();
 
       this.handler = DatabaseHandler();
       List<Bip> bips = [];
@@ -203,16 +206,20 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
           await this.handler.getSecoesParaSincronizar(inventario.sId);
 
       for (final secao in secoes) {
-        print(secao);
         bips = await this.handler.getBipsSecao(secao.id);
-        /*InventarioApi.sincronizarSecao(inventario.sId,secao.idSecao, List<Bip> bips, prefs.get('tk'))
-          .then((response) async {
-      await this.handler.updateStatusSecao(secao.id, 2);
-      });*/
-
+        var request = {
+          'inventory': inventario.sId,
+          'section': secao.idSecao,
+          'bip': bips
+        };
+        await InventarioApi.sincronizarSecao(request, prefs.get('tk'))
+            .then((response) async {
+          await this.handler.updateStatusSecao(secao.id, 2);
+        });
       }
       EasyLoading.showSuccess('Dados Sincronizados Com Sucesso!');
       _dismissDialog();
+      _getSecoes(inventario);
     } on Exception catch (e) {
       _dismissDialog();
       EasyLoading.showError(e.toString());
@@ -332,7 +339,8 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                             inventario,
                             secaoSelecionada.id,
                             secaoSelecionada.idSecao,
-                            itensClient)),
+                            itensClient,
+                            false)),
                   );
                 },
                 child: secaoSelecionada.status == 0

@@ -16,6 +16,21 @@ class InventarioApi {
     return await http.get(url, headers: header);
   }
 
+  static Future sincronizarSecao(request, String token) async {
+    var url = Uri.http('10.0.2.2:3000', '/bip/syncronize');
+
+    var header = {
+      "Content-type": "application/json",
+      'Authorization': 'Bearer $token',
+    };
+
+    Map params = {"bip": request};
+
+    var body = json.encode(params);
+
+    return await http.post(url, headers: header, body: body);
+  }
+
   static Future finalizarSecao(
       String inventario, String token, List<Bip> bips) async {
     var url = Uri.http('10.0.2.2:3000', '/inventory/finalizarSecao');

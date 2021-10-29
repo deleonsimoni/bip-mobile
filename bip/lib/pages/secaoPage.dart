@@ -23,6 +23,9 @@ class _SecaoPageState extends State<SecaoPage> {
   InventarioList inventario;
   DatabaseHandler handler;
   List<String> itensClient;
+  bool showKeyboard = true;
+  bool isPermitAvulse = false;
+
   final ctrlSecao = TextEditingController();
 
   _SecaoPageState(this.inventario, this.itensClient) {}
@@ -58,8 +61,8 @@ class _SecaoPageState extends State<SecaoPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) =>
-              BipPage(inventario, idSecao, ctrlSecao.text, this.itensClient)),
+          builder: (context) => BipPage(inventario, idSecao, ctrlSecao.text,
+              this.itensClient, isPermitAvulse)),
     );
   }
 
@@ -72,6 +75,18 @@ class _SecaoPageState extends State<SecaoPage> {
 
   @override
   Widget build(BuildContext context) {
+    Color getColor(Set<MaterialState> states) {
+      const Set<MaterialState> interactiveStates = <MaterialState>{
+        MaterialState.pressed,
+        MaterialState.hovered,
+        MaterialState.focused,
+      };
+      if (states.any(interactiveStates.contains)) {
+        return Colors.blue;
+      }
+      return Colors.red;
+    }
+
     return Scaffold(
       appBar: AppBar(
         //leading: Text('B.I.P'),
@@ -100,7 +115,14 @@ class _SecaoPageState extends State<SecaoPage> {
                 child: TextFormField(
                   autofocus: true,
                   controller: ctrlSecao,
+                  showCursor: showKeyboard,
+                  readOnly: showKeyboard,
                   validator: validaSecao,
+                  onTap: () {
+                    setState(() {
+                      showKeyboard = false;
+                    });
+                  },
                   decoration: InputDecoration(
                       hintText: 'Seção',
                       filled: true,
@@ -114,6 +136,22 @@ class _SecaoPageState extends State<SecaoPage> {
                 ),
               ),
               Divider(),
+              Text(
+                'Seção para contagem avulsa?',
+                textAlign: TextAlign.center,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Checkbox(
+                checkColor: Colors.white,
+                fillColor: MaterialStateProperty.resolveWith(getColor),
+                value: isPermitAvulse,
+                onChanged: (bool value) {
+                  setState(() {
+                    isPermitAvulse = value;
+                  });
+                },
+              ),
               ButtonTheme(
                 height: 60.0,
                 child: ElevatedButton(

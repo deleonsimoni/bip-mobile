@@ -39,6 +39,7 @@ class _SecaoInicioEFimState extends State<SecaoInicioEFimPage> {
   String secaoText;
   FocusNode nodeFirst = FocusNode();
   FocusNode nodeSecond = FocusNode();
+  bool showKeyboard = true;
   List<String> itensClient;
   _SecaoInicioEFimState(this.inventario, this.itensClient);
   final ctrlInicio = TextEditingController();
@@ -48,7 +49,9 @@ class _SecaoInicioEFimState extends State<SecaoInicioEFimPage> {
   @override
   void initState() {
     ctrlInicio.addListener(() {
-      FocusScope.of(context).requestFocus(nodeSecond);
+      if (ctrlInicio.text != "") {
+        FocusScope.of(context).requestFocus(nodeSecond);
+      }
     });
 
     super.initState();
@@ -104,10 +107,15 @@ class _SecaoInicioEFimState extends State<SecaoInicioEFimPage> {
                 margin: EdgeInsets.only(left: 16.0),
                 child: TextFormField(
                   autofocus: true,
-                  showCursor: true,
+                  showCursor: showKeyboard,
                   focusNode: nodeFirst,
-                  readOnly: true,
+                  readOnly: showKeyboard,
                   controller: ctrlInicio,
+                  onTap: () {
+                    setState(() {
+                      showKeyboard = false;
+                    });
+                  },
                   decoration: InputDecoration(
                     hintText: 'Início Seção',
                     filled: true,
@@ -122,9 +130,14 @@ class _SecaoInicioEFimState extends State<SecaoInicioEFimPage> {
                   margin: EdgeInsets.only(left: 16.0),
                   child: TextFormField(
                     controller: ctrlFim,
-                    showCursor: true,
-                    readOnly: true,
+                    showCursor: showKeyboard,
+                    readOnly: showKeyboard,
                     focusNode: nodeSecond,
+                    onTap: () {
+                      setState(() {
+                        showKeyboard = false;
+                      });
+                    },
                     decoration: InputDecoration(
                       hintText: 'Fim Seção',
                       filled: true,
