@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:bip/models/bip.dart';
 import 'package:bip/models/inventarioList.dart';
@@ -6,6 +7,7 @@ import 'package:bip/pages/detalheInventarioPage.dart';
 import 'package:bip/services/databaseHandler.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_zebra_datawedge/flutter_zebra_datawedge.dart';
 
 class AlwaysDisabledFocusNode extends FocusNode {
   @override
@@ -38,6 +40,7 @@ class _BipPageState extends State<BipPage> {
   String secaoText;
   bool showKeyboard = true;
   FocusNode nodeFirst = FocusNode();
+  String _data = "";
 
   List<String> itensClient;
   _BipPageState(this.inventario, this.secao, this.secaoText, this.itensClient,
@@ -49,17 +52,34 @@ class _BipPageState extends State<BipPage> {
 
   @override
   void initState() {
-    ctrlRefer.addListener(() {
-      if (showKeyboard == true && ctrlRefer.text != "") {
-        _registrar();
-      }
-    });
+    initDataWedgeListener();
     /*new Timer(const Duration(milliseconds: 400), () {
       setState(() {
         ctrlRefer.text = "0000010010015";
       });
     });*/
     super.initState();
+  }
+
+  Future<void> initDataWedgeListener() async {
+    FlutterZebraDataWedge.listenForDataWedgeEvent((response) {
+      if (response != null && response is String)
+        setState(() {
+          Map<String, dynamic> jsonResponse;
+          try {
+            jsonResponse = json.decode(response);
+          } catch (e) {
+            //TODO handling
+          }
+          if (jsonResponse != null) {
+            _data = jsonResponse["decodedData"];
+            ctrlRefer.text = _data;
+            _registrar();
+          } else {
+            _data = "An error occured";
+          }
+        });
+    });
   }
 
   _finalizarSecao() async {
@@ -173,12 +193,12 @@ class _BipPageState extends State<BipPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
+                /*Text(
                   'Seção: $secaoText BIPADOS: ${bips.length}',
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+                ),*/
                 Divider(),
                 Container(
                   margin: EdgeInsets.only(left: 16.0),

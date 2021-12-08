@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
+import 'dart:async';
 
 import 'package:bip/models/bip.dart';
 import 'package:bip/models/inventarioList.dart';
@@ -11,6 +13,7 @@ import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:flutter_zebra_datawedge/flutter_zebra_datawedge.dart';
 
 class AlwaysDisabledFocusNode extends FocusNode {
   @override
@@ -45,6 +48,9 @@ class _SecaoInicioEFimState extends State<SecaoInicioEFimPage> {
   final ctrlInicio = TextEditingController();
   final ctrlFim = TextEditingController();
   DatabaseHandler handler;
+  String _data = "waiting...";
+  String _labelType = "waiting...";
+  String _source = "waiting...";
 
   @override
   void initState() {
@@ -53,8 +59,36 @@ class _SecaoInicioEFimState extends State<SecaoInicioEFimPage> {
         FocusScope.of(context).requestFocus(nodeSecond);
       }
     });
+    initDataWedgeListener();
 
     super.initState();
+  }
+
+  Future<void> initDataWedgeListener() async {
+    FlutterZebraDataWedge.listenForDataWedgeEvent((response) {
+      if (response != null && response is String)
+        setState(() {
+          Map<String, dynamic> jsonResponse;
+          try {
+            jsonResponse = json.decode(response);
+          } catch (e) {
+            //TODO handling
+          }
+          if (jsonResponse != null) {
+            _data = jsonResponse["decodedData"];
+            _labelType = jsonResponse["decodedLabelType"];
+            _source = jsonResponse["decodedSource"];
+
+            if (showKeyboard == true && ctrlInicio.text == "") {
+              ctrlInicio.text = _data;
+            } else if (showKeyboard == true && ctrlInicio.text != "") {
+              ctrlFim.text = _data;
+            }
+          } else {
+            _source = "An error occured";
+          }
+        });
+    });
   }
 
   _registrar() async {
@@ -103,6 +137,17 @@ class _SecaoInicioEFimState extends State<SecaoInicioEFimPage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Divider(),
+              /*Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("Label Type: $_labelType"),
+                    Text("Soruce: $_source"),
+                    Text("Data: $_data")
+                  ],
+                ),
+              ),*/
               Container(
                 margin: EdgeInsets.only(left: 16.0),
                 child: TextFormField(

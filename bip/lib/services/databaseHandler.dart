@@ -139,7 +139,7 @@ class DatabaseHandler {
             "left JOIN bip b on s.id = b.idSecao " +
             "WHERE s.idInventario = '$idInventario' " +
             "GROUP BY s.idsecao " +
-            "ORDER BY s.idsecao ASC ");
+            "ORDER BY b.id ASC ");
     return List.generate(maps.length, (i) {
       return Secao(
         id: maps[i]['id'],
