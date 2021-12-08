@@ -138,7 +138,8 @@ class DatabaseHandler {
         "SELECT s.*, count(b.id) bips FROM secao s " +
             "left JOIN bip b on s.id = b.idSecao " +
             "WHERE s.idInventario = '$idInventario' " +
-            "GROUP BY s.idsecao ");
+            "GROUP BY s.idsecao " +
+            "ORDER BY s.idsecao ASC ");
     return List.generate(maps.length, (i) {
       return Secao(
         id: maps[i]['id'],

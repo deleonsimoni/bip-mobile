@@ -10,7 +10,7 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 class LoginApi {
   static Future<Usuario> login(String user, String password) async {
     EasyLoading.show(status: 'Aguarde...');
-    var url = Uri.http('10.0.2.2:3000', '/user/auth/login');
+    var url = Uri.http('3.21.69.209', '/user/auth/login');
     //  Uri.https('www.googleapis.com', '/books/v1/volumes', {'q': '{http}'});
 
     var header = {"Content-type": "application/json"};

@@ -49,7 +49,7 @@ class _SecaoInicioEFimState extends State<SecaoInicioEFimPage> {
   @override
   void initState() {
     ctrlInicio.addListener(() {
-      if (ctrlInicio.text != "") {
+      if (showKeyboard == true && ctrlInicio.text != "") {
         FocusScope.of(context).requestFocus(nodeSecond);
       }
     });

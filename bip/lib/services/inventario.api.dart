@@ -5,8 +5,8 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 
 class InventarioApi {
   static Future getInventario(String token) async {
-    //var url = Uri.http('3.21.69.209', '/inventory/inventaryUser');
-    var url = Uri.http('10.0.2.2:3000', '/inventory/inventaryUser');
+    var url = Uri.http('3.21.69.209', '/inventory/inventaryUser');
+    //var url = Uri.http('10.0.2.2:3000', '/inventory/inventaryUser');
 
     var header = {
       "Content-type": "application/json",
@@ -17,7 +17,7 @@ class InventarioApi {
   }
 
   static Future sincronizarSecao(request, String token) async {
-    var url = Uri.http('10.0.2.2:3000', '/bip/syncronize');
+    var url = Uri.http('3.21.69.209', '/bip/syncronize');
 
     var header = {
       "Content-type": "application/json",
@@ -33,7 +33,7 @@ class InventarioApi {
 
   static Future finalizarSecao(
       String inventario, String token, List<Bip> bips) async {
-    var url = Uri.http('10.0.2.2:3000', '/inventory/finalizarSecao');
+    var url = Uri.http('3.21.69.209', '/inventory/finalizarSecao');
 
     var header = {
       "Content-type": "application/json",
@@ -48,7 +48,7 @@ class InventarioApi {
   }
 
   static Future getItens(String id, String token) async {
-    var url = Uri.http('10.0.2.2:3000', '/inventory/inventaryUser/$id/itens');
+    var url = Uri.http('3.21.69.209', '/inventory/inventaryUser/$id/itens');
 
     var header = {
       "Content-type": "application/json",
