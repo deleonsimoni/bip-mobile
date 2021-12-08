@@ -1,14 +1,10 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:bip/models/bip.dart';
 import 'package:bip/models/inventarioList.dart';
 import 'package:bip/pages/detalheInventarioPage.dart';
-import 'package:bip/pages/secaoPage.dart';
 import 'package:bip/services/databaseHandler.dart';
-import 'package:bip/services/inventario.api.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 
 class AlwaysDisabledFocusNode extends FocusNode {
@@ -60,43 +56,51 @@ class _BipPageState extends State<BipPage> {
     });
     /*new Timer(const Duration(milliseconds: 400), () {
       setState(() {
-        ctrlRefer.text = "00ff5";
+        ctrlRefer.text = "0000010010015";
       });
     });*/
     super.initState();
   }
 
   _finalizarSecao() async {
-    if (ctrlFinalize.text != null &&
-        int.parse(ctrlFinalize.text) != bips.length) {
-      await this.handler.deleteBip(secao);
-      await this.handler.updateStatusSecao(secao, 0);
-
-      //await this.handler.deleteSecao(secao);
-
-      EasyLoading.addStatusCallback((status) {
-        if (status == EasyLoadingStatus.dismiss) {
-          EasyLoading.removeAllCallbacks();
-
-          Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) =>
-                      DetalheInventariosPage(inventario, this.itensClient)));
-        }
-      });
-      EasyLoading.showInfo(
-          'Quantidade informada não bate, favor bipar seção novamente');
-      return;
-    } else {
-      EasyLoading.showSuccess('Seção contabilizada com sucesso');
-      await this.handler.updateStatusSecao(secao, 1);
-
+    if (bips.length == 0) {
       Navigator.push(
           context,
           MaterialPageRoute(
               builder: (context) =>
                   DetalheInventariosPage(inventario, this.itensClient)));
+    } else {
+      if (ctrlFinalize.text != null &&
+          int.parse(ctrlFinalize.text) != bips.length) {
+        await this.handler.deleteBip(secao);
+        await this.handler.updateStatusSecao(secao, 0);
+
+        //await this.handler.deleteSecao(secao);
+
+        EasyLoading.addStatusCallback((status) {
+          if (status == EasyLoadingStatus.dismiss) {
+            EasyLoading.removeAllCallbacks();
+
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        DetalheInventariosPage(inventario, this.itensClient)));
+          }
+        });
+        EasyLoading.showInfo(
+            'Quantidade informada não bate, favor bipar seção novamente');
+        return;
+      } else {
+        EasyLoading.showSuccess('Seção contabilizada com sucesso');
+        await this.handler.updateStatusSecao(secao, 1);
+
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) =>
+                    DetalheInventariosPage(inventario, this.itensClient)));
+      }
     }
   }
 
@@ -104,6 +108,7 @@ class _BipPageState extends State<BipPage> {
     EasyLoading.show(status: "Aguarde...");
     if (ctrlRefer.text == "" || ctrlRefer == null) {
       EasyLoading.showError('Escaneie o código');
+      FocusScope.of(context).requestFocus(nodeFirst);
       return;
     }
 
@@ -124,6 +129,7 @@ class _BipPageState extends State<BipPage> {
 
     if (!find && !isPermitAvulse) {
       EasyLoading.showInfo('Atenção: Produto não catálogado');
+      FocusScope.of(context).requestFocus(nodeFirst);
       return;
     } else {
       Bip bip =
@@ -168,7 +174,7 @@ class _BipPageState extends State<BipPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Seção: $secaoText',
+                  'Seção: $secaoText BIPADOS: ${bips.length}',
                   textAlign: TextAlign.center,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontWeight: FontWeight.bold),
