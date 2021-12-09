@@ -1,5 +1,6 @@
 import 'package:bip/pages/inventariosPage.dart';
 import 'package:bip/pages/loginPage.dart';
+import 'package:bip/pages/testPage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -86,6 +87,28 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () {},
                   child: Text(
                     "Marcar Ponto",
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.deepPurple, // background
+                    onPrimary: Colors.white, // foreground
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(50)),
+                  ),
+                ),
+              ),
+              Divider(),
+              ButtonTheme(
+                height: 60.0,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => TestPage()),
+                    );
+                  },
+                  child: Text(
+                    "Calibrar",
                     style: TextStyle(color: Colors.white),
                   ),
                   style: ElevatedButton.styleFrom(
