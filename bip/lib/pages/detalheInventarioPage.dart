@@ -339,6 +339,7 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                             inventario,
                             secaoSelecionada.id,
                             secaoSelecionada.idSecao,
+                            secaoSelecionada.qtdBips,
                             itensClient,
                             false)),
                   );

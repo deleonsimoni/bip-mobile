@@ -61,7 +61,7 @@ class _SecaoPageState extends State<SecaoPage> {
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (context) => BipPage(inventario, idSecao, ctrlSecao.text,
+          builder: (context) => BipPage(inventario, idSecao, ctrlSecao.text, 0,
               this.itensClient, isPermitAvulse)),
     );
   }

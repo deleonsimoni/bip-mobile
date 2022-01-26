@@ -19,15 +19,16 @@ class BipPage extends StatefulWidget {
   bool isPermitAvulse;
   int secao;
   String secaoText;
+  int qtdSecaoContabilizada;
   DatabaseHandler handler;
   List<String> itensClient;
-  BipPage(this.inventario, this.secao, this.secaoText, this.itensClient,
-      this.isPermitAvulse);
+  BipPage(this.inventario, this.secao, this.secaoText,
+      this.qtdSecaoContabilizada, this.itensClient, this.isPermitAvulse);
 
   @override
   State<StatefulWidget> createState() {
     return _BipPageState(this.inventario, this.secao, this.secaoText,
-        this.itensClient, this.isPermitAvulse);
+        this.qtdSecaoContabilizada, this.itensClient, this.isPermitAvulse);
   }
 }
 
@@ -37,14 +38,15 @@ class _BipPageState extends State<BipPage> {
   bool isPermitAvulse;
   List<Bip> bips = [];
   int secao;
+  int qtdSecaoContabilizada;
   String secaoText;
   bool showKeyboard = true;
   FocusNode nodeFirst = FocusNode();
   String _data = "";
 
   List<String> itensClient;
-  _BipPageState(this.inventario, this.secao, this.secaoText, this.itensClient,
-      this.isPermitAvulse);
+  _BipPageState(this.inventario, this.secao, this.secaoText,
+      this.qtdSecaoContabilizada, this.itensClient, this.isPermitAvulse);
   final ctrlRefer = TextEditingController();
   final ctrlQuantity = TextEditingController();
   final ctrlFinalize = TextEditingController();
@@ -91,7 +93,8 @@ class _BipPageState extends State<BipPage> {
                   DetalheInventariosPage(inventario, this.itensClient)));
     } else {
       if (ctrlFinalize.text != null &&
-          int.parse(ctrlFinalize.text) != bips.length) {
+          int.parse(ctrlFinalize.text) !=
+              (bips.length + this.qtdSecaoContabilizada)) {
         await this.handler.deleteBip(secao);
         await this.handler.updateStatusSecao(secao, 0);
 
