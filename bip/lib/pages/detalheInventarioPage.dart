@@ -2,6 +2,7 @@ import 'package:bip/models/bip.dart';
 import 'package:bip/models/db/secao.dart';
 import 'package:bip/models/inventarioList.dart';
 import 'package:bip/pages/bipPage.dart';
+import 'package:bip/pages/inventariosPage.dart';
 import 'package:bip/pages/secaoInicioEFimPage.dart';
 import 'package:bip/pages/secaoPage.dart';
 import 'package:bip/services/databaseHandler.dart';
@@ -50,6 +51,19 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
     var secoes = await this.handler.getSecoes(inventario.sId);
     EasyLoading.dismiss();
     setState(() {
+      var total = 0;
+
+      secoes.forEach((element) async {
+        total = total + element.qtdBips;
+      });
+
+      var ultimaSecao = Secao(
+        idSecao: 'Total',
+        qtdBips: total,
+      );
+
+      secoes.add(ultimaSecao);
+
       listaSecoes = secoes;
     });
     if (listaSecoes == null || listaSecoes.length == 0) {
@@ -59,15 +73,26 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          //leading: Text('B.I.P'),
-          title: Text('${inventario.client.name}'),
-          actions: [
-            Icon(Icons.ac_unit),
-          ],
-        ),
-        body: detalheInventario());
+    return WillPopScope(
+        onWillPop: () async {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text('Botão de voltar desativado nesta página')));
+          return false;
+        },
+        child: Scaffold(
+            appBar: AppBar(
+              //leading: Text('B.I.P'),
+              title: Text('${inventario.client.name}'),
+              leading: IconButton(
+                icon: Icon(Icons.arrow_back,
+                    color: Color.fromARGB(255, 255, 255, 255)),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => InventariosPage()),
+                ),
+              ),
+            ),
+            body: detalheInventario()));
   }
 
   _returnIcon(secao) {
@@ -99,12 +124,13 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                 height: 60.0,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              SecaoPage(inventario, itensClient)),
-                    );
+                    Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) =>
+                                SecaoPage(inventario, itensClient)), (r) {
+                      return false;
+                    });
                   },
                   child: Text(
                     "Nova Seção",
@@ -156,10 +182,14 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                             ],
                           ),
                           onTap: () {
-                            _showOptionsDialog(listaSecoes[index]);
+                            if (listaSecoes[index].id != null) {
+                              _showOptionsDialog(listaSecoes[index]);
+                            }
                           },
                           onLongPress: () {
-                            _showOptionsDialogDelete(listaSecoes[index]);
+                            if (listaSecoes[index].id != null) {
+                              _showOptionsDialogDelete(listaSecoes[index]);
+                            }
                           },
                         ),
                       );
@@ -306,6 +336,7 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
 
   void _showOptionsDialog(secao) {
     this.secaoSelecionada = secao;
+
     showDialog(
         context: context,
         builder: (context) {
@@ -332,17 +363,18 @@ class _DetalheInventariosPageState extends State<DetalheInventariosPage> {
                 ),
                 onPressed: () {
                   _dismissDialog();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => BipPage(
-                            inventario,
-                            secaoSelecionada.id,
-                            secaoSelecionada.idSecao,
-                            secaoSelecionada.qtdBips,
-                            itensClient,
-                            false)),
-                  );
+                  Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => BipPage(
+                              inventario,
+                              secaoSelecionada.id,
+                              secaoSelecionada.idSecao,
+                              secaoSelecionada.qtdBips,
+                              itensClient,
+                              false)), (r) {
+                    return false;
+                  });
                 },
                 child: secaoSelecionada.status == 0
                     ? Text('Abrir Seção')

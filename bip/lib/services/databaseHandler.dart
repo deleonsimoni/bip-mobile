@@ -140,6 +140,7 @@ class DatabaseHandler {
             "WHERE s.idInventario = '$idInventario' " +
             "GROUP BY s.idsecao " +
             "ORDER BY b.id ASC ");
+
     return List.generate(maps.length, (i) {
       return Secao(
         id: maps[i]['id'],
@@ -199,6 +200,15 @@ class DatabaseHandler {
     } else {
       return false;
     }
+  }
+
+  Future<void> cleanDatabase() async {
+    final db = await initializeDB();
+    await db.delete('inventoryClient');
+
+    await db.delete('secao');
+
+    await db.delete('bip');
   }
 
   Future<void> deleteInventory(String id) async {

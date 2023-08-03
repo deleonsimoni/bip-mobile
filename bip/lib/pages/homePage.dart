@@ -3,6 +3,8 @@ import 'package:bip/pages/loginPage.dart';
 import 'package:bip/pages/testPage.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:bip/services/databaseHandler.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -11,6 +13,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   String usuario = '';
+  DatabaseHandler handler;
 
   @override
   void initState() {
@@ -107,6 +110,9 @@ class _HomePageState extends State<HomePage> {
                       MaterialPageRoute(builder: (context) => TestPage()),
                     );
                   },
+                  onLongPress: () {
+                    _showOptionsDialogCleanDatabase();
+                  },
                   child: Text(
                     "Calibrar",
                     style: TextStyle(color: Colors.white),
@@ -159,5 +165,49 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  _dismissDialog() {
+    Navigator.pop(context);
+  }
+
+  void _showOptionsDialogCleanDatabase() {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('Atenção'),
+            content: Text('Deseja excluir toda base deste dispositivo?'),
+            actions: <Widget>[
+              TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.all(16.0),
+                  primary: Colors.blue,
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                onPressed: () {
+                  _dismissDialog();
+                },
+                child: Text('Não'),
+              ),
+              TextButton(
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.all(16.0),
+                  primary: Colors.blue,
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                onPressed: () async {
+                  EasyLoading.show(status: 'Aguarde...');
+                  this.handler = DatabaseHandler();
+
+                  await this.handler.cleanDatabase();
+                  _dismissDialog();
+                  EasyLoading.dismiss();
+                },
+                child: Text('Sim'),
+              )
+            ],
+          );
+        });
   }
 }

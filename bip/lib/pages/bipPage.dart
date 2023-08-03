@@ -65,7 +65,7 @@ class _BipPageState extends State<BipPage> {
 
   Future<void> initDataWedgeListener() async {
     FlutterZebraDataWedge.listenForDataWedgeEvent((response) {
-      if (response != null && response is String)
+      if (response != null && response is String && secaoText != null)
         setState(() {
           Map<String, dynamic> jsonResponse;
           try {
@@ -78,19 +78,21 @@ class _BipPageState extends State<BipPage> {
             ctrlRefer.text = _data;
             _registrar();
           } else {
-            _data = "An error occured";
+            _data = "An error occured bipando zebra";
           }
         });
     });
   }
 
   _finalizarSecao() async {
+    secaoText = null;
     if (bips.length == 0) {
-      Navigator.push(
+      Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
               builder: (context) =>
-                  DetalheInventariosPage(inventario, this.itensClient)));
+                  DetalheInventariosPage(inventario, this.itensClient)),
+          (Route<dynamic> route) => false);
     } else {
       if (ctrlFinalize.text != null &&
           int.parse(ctrlFinalize.text) !=
@@ -104,11 +106,12 @@ class _BipPageState extends State<BipPage> {
           if (status == EasyLoadingStatus.dismiss) {
             EasyLoading.removeAllCallbacks();
 
-            Navigator.push(
+            Navigator.pushAndRemoveUntil(
                 context,
                 MaterialPageRoute(
                     builder: (context) =>
-                        DetalheInventariosPage(inventario, this.itensClient)));
+                        DetalheInventariosPage(inventario, this.itensClient)),
+                (Route<dynamic> route) => false);
           }
         });
         EasyLoading.showInfo(
@@ -118,17 +121,25 @@ class _BipPageState extends State<BipPage> {
         EasyLoading.showSuccess('Seção contabilizada com sucesso');
         await this.handler.updateStatusSecao(secao, 1);
 
-        Navigator.push(
+        Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
                 builder: (context) =>
-                    DetalheInventariosPage(inventario, this.itensClient)));
+                    DetalheInventariosPage(inventario, this.itensClient)), (r) {
+          return false;
+        });
       }
     }
   }
 
   _registrar() async {
     EasyLoading.show(status: "Aguarde...");
+
+    if (secaoText == null) {
+      EasyLoading.dismiss();
+      return;
+    }
+
     if (ctrlRefer.text == "" || ctrlRefer == null) {
       EasyLoading.showError('Escaneie o código');
       FocusScope.of(context).requestFocus(nodeFirst);

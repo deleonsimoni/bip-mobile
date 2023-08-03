@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:bip/models/inventarioList.dart';
 import 'package:bip/pages/detalheInventarioPage.dart';
+import 'package:bip/pages/homePage.dart';
 import 'package:bip/services/FileUtils.dart';
 import 'package:bip/services/databaseHandler.dart';
 import 'package:bip/services/inventario.api.dart';
@@ -74,9 +75,14 @@ class _InventariosPageState extends State<InventariosPage> {
         appBar: AppBar(
           //leading: Text('B.I.P'),
           title: Text('Inventários'),
-          actions: [
-            Icon(Icons.ac_unit),
-          ],
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back,
+                color: Color.fromARGB(255, 255, 255, 255)),
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => HomePage()),
+            ),
+          ),
         ),
         body: listaInventarios());
   }
